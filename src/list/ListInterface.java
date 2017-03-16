@@ -7,7 +7,7 @@ import iterator.utils.IteratorInterface;
  * Interface is an interface for List implementations specifying the most important
  * methods which are required
  */
-public interface ListInterface<T> {
+public interface ListInterface<T> extends IteratorInterface<T> {
     /**
      * Method returns number of elements in the list
      * @return {int} size of the list; positive integer
