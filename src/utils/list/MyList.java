@@ -1,6 +1,7 @@
-package list;
+package utils.list;
 
-import iterator.utils.IteratorInterface;
+import interfaces.ListInterface;
+import interfaces.IteratorInterface;
 
 /**
  * Created by Karol Pokomeda on 2017-03-15.
@@ -18,22 +19,40 @@ public class MyList<T> implements ListInterface<T> {
 
     @Override
     public int size() {
-        return this.size();
+        return this.size;
     }
 
     @Override
     public void insert(T t, int index) throws IndexOutOfBoundsException {
-
+        if (index > 0){
+            this.first();
+            while(index-- > 1) this.next();
+            Element<T> previousElement = this.focused;
+            Element<T> currentElement = new Element<T>(t);
+            currentElement.setNext(previousElement.getNext());
+            previousElement.setNext(currentElement);
+        } else {
+            Element<T> second = this.head.getNext();
+            Element<T> first = new Element<T>(t);
+            first.setNext(second);
+            this.head = first;
+        }
     }
 
     @Override
     public T get(int index) throws IndexOutOfBoundsException {
-        return null;
+        this.first();
+        while (index-- > 0) this.next();
+        return this.current();
     }
 
     @Override
     public T set(T t, int index) throws IndexOutOfBoundsException {
-        return null;
+        this.first();
+        while (index-- > 0) this.next();
+        T result = this.current();
+        this.focused.setCurrent(t);
+        return result;
     }
 
     @Override
@@ -50,31 +69,43 @@ public class MyList<T> implements ListInterface<T> {
 
     @Override
     public T delete(T t) throws IndexOutOfBoundsException {
-        return null;
+        return null; //TODO: implement
     }
 
     @Override
     public T delete(int index) throws IndexOutOfBoundsException {
-        return null;
+        return null; //TODO: implement
     }
 
     @Override
     public boolean contains(T t) {
+        this.first();
+        while(!this.isDone()){
+            if (this.current().equals(t)) return true;
+            this.next();
+        }
         return false;
     }
 
     @Override
-    public int indexOf(T t) {
-        return 0;
+    public int indexOf(T t){
+        this.first();
+        while(!this.isDone()){
+            if (this.current().equals(t)) return this.focusedIndex;
+            this.next();
+        }
+        return -1;
     }
 
     @Override
     public boolean isEmpty() {
-        return false;
+        if (this.head != null) return false;
+        return true;
     }
 
     @Override
     public IteratorInterface<T> iterator() {
+        //TODO: delete from interface
         return null;
     }
 
@@ -125,7 +156,7 @@ public class MyList<T> implements ListInterface<T> {
 
     @Override
     public boolean isDone() {
-        if (this.focusedIndex > this.size || this.focusedIndex <= 0) return false;
+        if (this.focusedIndex < this.size && this.focusedIndex >= 0) return false;
         return true;
     }
 
@@ -135,17 +166,17 @@ public class MyList<T> implements ListInterface<T> {
         return this.focused.getCurrent();
     }
 
-    @Override
+    @Override //TODO: implement
     public boolean addCurrent(T t) throws IndexOutOfBoundsException {
         return false;
     }
 
-    @Override
+    @Override //TODO: implement
     public boolean addNext(T t) throws IndexOutOfBoundsException {
         return false;
     }
 
-    @Override
+    @Override //TODO: implement
     public boolean deleteCurrent() throws IndexOutOfBoundsException {
         return false;
     }

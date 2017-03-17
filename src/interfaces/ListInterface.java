@@ -1,13 +1,11 @@
-package list;
-
-import iterator.utils.IteratorInterface;
+package interfaces;
 
 /**
  * Created by Karol Pokomeda on 2017-03-15.
  * Interface is an interface for List implementations specifying the most important
  * methods which are required
  */
-public interface ListInterface<T> extends IteratorInterface<T> {
+public interface ListInterface<T> extends Iterable {
     /**
      * Method returns number of elements in the list
      * @return {int} size of the list; positive integer
