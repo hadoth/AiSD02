@@ -10,8 +10,6 @@ public class MyList<T> implements ListInterface<T> {
     private Element<T> head;
     private Element<T> tail;
     private int size;
-    private Element<T> focused;
-    private int focusedIndex;
 
     public MyList () {
         this.clear();
@@ -25,43 +23,43 @@ public class MyList<T> implements ListInterface<T> {
     @Override
     public void insert(T t, int index) throws IndexOutOfBoundsException {
         if (index > 0){
-            this.first();
-            while(index-- > 1) this.next();
-            Element<T> previousElement = this.focused;
-            Element<T> currentElement = new Element<T>(t);
+            Element<T> previousElement = head;
+            while(index-- > 1) previousElement = previousElement.getNext();
+            Element<T> currentElement = new Element<>(t);
             currentElement.setNext(previousElement.getNext());
             previousElement.setNext(currentElement);
         } else {
             Element<T> second = this.head.getNext();
-            Element<T> first = new Element<T>(t);
+            Element<T> first = new Element<>(t);
             first.setNext(second);
             this.head = first;
         }
+        this.size++;
     }
 
     @Override
     public T get(int index) throws IndexOutOfBoundsException {
-        this.first();
-        while (index-- > 0) this.next();
-        return this.current();
+        Element<T> currentElement = head;
+        while (index-- > 0) currentElement = currentElement.getNext();
+        return currentElement.getCurrent();
     }
 
     @Override
     public T set(T t, int index) throws IndexOutOfBoundsException {
-        this.first();
-        while (index-- > 0) this.next();
-        T result = this.current();
-        this.focused.setCurrent(t);
+        Element<T> currentElement = head;
+        while (index-- > 0) currentElement = currentElement.getNext();
+        T result = currentElement.getCurrent();
+        currentElement.setCurrent(t);
         return result;
     }
 
     @Override
     public void add(T t) {
         if (this.tail != null){
-            this.tail.setNext(new Element<T>(t));
+            this.tail.setNext(new Element<>(t));
             this.tail = tail.getNext();
         } else {
-            this.head = new Element<T>(t);
+            this.head = new Element<>(t);
             this.tail = this.head;
         }
         this.size++;
@@ -69,44 +67,56 @@ public class MyList<T> implements ListInterface<T> {
 
     @Override
     public T delete(T t) throws IndexOutOfBoundsException {
-        return null; //TODO: implement
+        return this.delete(this.indexOf(t));
     }
 
     @Override
     public T delete(int index) throws IndexOutOfBoundsException {
-        return null; //TODO: implement
+        if (index < 0 || index >= this.size)
+            throw new IndexOutOfBoundsException("Object not found or index exceeds data structure bounds");
+        T result = this.get(index);
+        if (index > 0){
+            Element<T> previousElement = head;
+            while(index-- > 1) previousElement = previousElement.getNext();
+            Element<T> nextElement = previousElement.getNext().getNext();
+            previousElement.setNext(nextElement);
+        } else {
+            this.head = this.head.getNext();
+        }
+        this.size--;
+        return result;
     }
 
     @Override
     public boolean contains(T t) {
-        this.first();
-        while(!this.isDone()){
-            if (this.current().equals(t)) return true;
-            this.next();
+        Element<T> currentElement = head;
+        while (currentElement != null) {
+            if (currentElement.getCurrent().equals(t)) return true;
+            currentElement = currentElement.getNext();
         }
         return false;
     }
 
     @Override
     public int indexOf(T t){
-        this.first();
-        while(!this.isDone()){
-            if (this.current().equals(t)) return this.focusedIndex;
-            this.next();
+        Element<T> currentElement = head;
+        int index = 0;
+        while (currentElement != null) {
+            if (currentElement.getCurrent().equals(t)) return index;
+            currentElement = currentElement.getNext();
+            index++;
         }
         return -1;
     }
 
     @Override
     public boolean isEmpty() {
-        if (this.head != null) return false;
-        return true;
+        return this.head == null;
     }
 
     @Override
     public IteratorInterface<T> iterator() {
-        //TODO: delete from interface
-        return null;
+        return new ListIterator(this);
     }
 
     @Override
@@ -114,74 +124,9 @@ public class MyList<T> implements ListInterface<T> {
         this.head = null;
         this.tail = null;
         this.size = 0;
-        this.focused = null;
-        this.focusedIndex = 0;
     }
 
-    @Override
-    public void first() {
-        this.focused = this.head;
-        this.focusedIndex = 0;
-    }
-
-    @Override
-    public void last() {
-        this.focused = this.tail;
-        this.focusedIndex = this.size - 1;
-    }
-
-    @Override
-    public void next() {
-        try {
-            this.focused = this.focused.getNext();
-        } catch (NullPointerException e){
-            this.focused = null;
-        } finally {
-            this.focusedIndex++;
-        }
-    }
-
-    @Override
-    public void previous() {
-        int indexToSet = --this.focusedIndex;
-        if (indexToSet >= 0){
-            this.first();
-            for (int i = 0; i < indexToSet; i++){
-                this.next();
-            }
-        } else{
-            this.focused = null;
-        }
-    }
-
-    @Override
-    public boolean isDone() {
-        if (this.focusedIndex < this.size && this.focusedIndex >= 0) return false;
-        return true;
-    }
-
-    @Override
-    public T current() throws IndexOutOfBoundsException {
-        if (this.isDone()) throw new IndexOutOfBoundsException("Iterator focus is out of bounds of the data structure");
-        return this.focused.getCurrent();
-    }
-
-    @Override //TODO: implement
-    public boolean addCurrent(T t) throws IndexOutOfBoundsException {
-        return false;
-    }
-
-    @Override //TODO: implement
-    public boolean addNext(T t) throws IndexOutOfBoundsException {
-        return false;
-    }
-
-    @Override //TODO: implement
-    public boolean deleteCurrent() throws IndexOutOfBoundsException {
-        return false;
-    }
-
-    private class Element<T> {
+    private static final class Element<T> {
         private T current;
         private Element<T> next;
 
@@ -204,6 +149,83 @@ public class MyList<T> implements ListInterface<T> {
 
         void setCurrent(T current) {
             this.current = current;
+        }
+    }
+
+    private final class ListIterator implements IteratorInterface<T>{
+        private Element<T> focused;
+        private int focusedIndex;
+        private MyList<T> internalList;
+
+        ListIterator(MyList<T> internalList){
+            this.internalList = internalList;
+        }
+
+        @Override
+        public void first() {
+            this.focused = this.internalList.head;
+            this.focusedIndex = 0;
+        }
+
+        @Override
+        public void last() {
+            this.focused = this.internalList.tail;
+            this.focusedIndex = this.internalList.size - 1;
+        }
+
+        @Override
+        public void next() {
+            try {
+                this.focused = this.focused.getNext();
+            } catch (NullPointerException e){
+                this.focused = null;
+            } finally {
+                this.focusedIndex++;
+            }
+        }
+
+        @Override
+        public void previous() {
+            int indexToSet = --this.focusedIndex;
+            if (indexToSet >= 0){
+                this.first();
+                for (int i = 0; i < indexToSet; i++){
+                    this.next();
+                }
+            } else{
+                this.focused = null;
+            }
+        }
+
+        @Override
+        public boolean isDone() {
+            return !(this.focusedIndex < this.internalList.size && this.focusedIndex >= 0);
+        }
+
+        @Override
+        public T current() throws IndexOutOfBoundsException {
+            if (this.isDone()) throw new IndexOutOfBoundsException("Iterator focus is out of bounds of the data structure");
+            return this.focused.getCurrent();
+        }
+
+        @Override
+        public boolean addCurrent(T t) throws IndexOutOfBoundsException {
+            this.internalList.insert(t, this.focusedIndex);
+            return true;
+        }
+
+        @Override
+        public boolean addNext(T t) throws IndexOutOfBoundsException {
+            Element<T> nextElement = this.focused.getNext();
+            this.focused.setNext(new Element<>(t));
+            this.focused.getNext().setNext(nextElement);
+            return true;
+        }
+
+        @Override
+        public boolean deleteCurrent() throws IndexOutOfBoundsException {
+            this.internalList.delete(this.focusedIndex);
+            return true;
         }
     }
 }
