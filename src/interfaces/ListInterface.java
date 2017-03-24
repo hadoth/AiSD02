@@ -5,7 +5,7 @@ package interfaces;
  * Interface is an interface for List implementations specifying the most important
  * methods which are required
  */
-public interface ListInterface<T> extends Iterable {
+public interface ListInterface<T> extends Iterable<T> {
     /**
      * Method returns number of elements in the list
      * @return {int} size of the list; positive integer
@@ -79,12 +79,6 @@ public interface ListInterface<T> extends Iterable {
      * @return {boolean} true if list is empty, false if not
      */
     boolean isEmpty();
-
-    /**
-     * Method generates basic iterator for ListInterface object
-     * @return {IteratorInterface<T>} iterator for this list
-     */
-    IteratorInterface<T> iterator();
 
     /**
      * Method clears the content of the list

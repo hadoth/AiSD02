@@ -1,18 +1,23 @@
 package utils.list;
 
-import interfaces.ListInterface;
 import interfaces.IteratorInterface;
+import interfaces.ListInterface;
 
 /**
- * Created by Karol Pokomeda on 2017-03-15.
+ * Created by Karol Pokomeda on 2017-03-24.
  */
-public class MyList<T> implements ListInterface<T> {
+public class MyListDouble<T> implements ListInterface<T> {
     private Element<T> head;
     private Element<T> tail;
     private int size;
 
-    public MyList () {
+    public MyListDouble() {
         this.clear();
+    }
+
+    @Override
+    public IteratorInterface<T> iterator() {
+        return new ListIterator(this);
     }
 
     @Override
@@ -25,13 +30,17 @@ public class MyList<T> implements ListInterface<T> {
         if (index > 0){
             Element<T> previousElement = head;
             while(index-- > 1) previousElement = previousElement.getNext();
+            Element<T> nextElement = previousElement.getNext();
             Element<T> currentElement = new Element<>(t);
-            currentElement.setNext(previousElement.getNext());
+            currentElement.setPrevious(previousElement);
+            currentElement.setNext(nextElement);
             previousElement.setNext(currentElement);
+            nextElement.setPrevious(currentElement);
         } else {
             Element<T> second = this.head;
             Element<T> first = new Element<>(t);
             first.setNext(second);
+            second.setPrevious(first);
             this.head = first;
         }
         this.size++;
@@ -55,12 +64,14 @@ public class MyList<T> implements ListInterface<T> {
 
     @Override
     public void add(T t) {
-        if (this.tail != null){
-            this.tail.setNext(new Element<>(t));
-            this.tail = tail.getNext();
+        Element<T> newTail = new Element<>(t);
+        if (this.isEmpty()){
+            newTail.setPrevious(this.tail);
+            this.tail.setNext(newTail);
+            this.tail = newTail;
         } else {
-            this.head = new Element<>(t);
-            this.tail = this.head;
+            this.head = newTail;
+            this.tail = newTail;
         }
         this.size++;
     }
@@ -77,11 +88,13 @@ public class MyList<T> implements ListInterface<T> {
         T result = this.get(index);
         if (index > 0){
             Element<T> previousElement = head;
-            while(index-- > 1) previousElement = previousElement.getNext();
+            while(index-- >1) previousElement = previousElement.getNext();
             Element<T> nextElement = previousElement.getNext().getNext();
             previousElement.setNext(nextElement);
+            nextElement.setPrevious(previousElement);
         } else {
             this.head = this.head.getNext();
+            this.head.setPrevious(null);
         }
         this.size--;
         return result;
@@ -90,7 +103,7 @@ public class MyList<T> implements ListInterface<T> {
     @Override
     public boolean contains(T t) {
         Element<T> currentElement = head;
-        while (currentElement != null) {
+        while(currentElement != null) {
             if (currentElement.getCurrent().equals(t)) return true;
             currentElement = currentElement.getNext();
         }
@@ -98,10 +111,10 @@ public class MyList<T> implements ListInterface<T> {
     }
 
     @Override
-    public int indexOf(T t){
+    public int indexOf(T t) {
         Element<T> currentElement = head;
         int index = 0;
-        while (currentElement != null) {
+        while(currentElement != null){
             if (currentElement.getCurrent().equals(t)) return index;
             currentElement = currentElement.getNext();
             index++;
@@ -115,11 +128,6 @@ public class MyList<T> implements ListInterface<T> {
     }
 
     @Override
-    public IteratorInterface<T> iterator() {
-        return new ListIterator(this);
-    }
-
-    @Override
     public void clear() {
         this.head = null;
         this.tail = null;
@@ -128,16 +136,19 @@ public class MyList<T> implements ListInterface<T> {
 
     private static final class Element<T> {
         private T current;
+        private Element<T> previous;
         private Element<T> next;
 
         Element(T t){
             this.current = t;
             this.next = null;
+            this.current = null;
         }
 
         Element<T> getNext() {
             return next;
         }
+        Element<T> getPrevious() {return previous;}
 
         T getCurrent() {
             return current;
@@ -147,6 +158,8 @@ public class MyList<T> implements ListInterface<T> {
             this.next = next;
         }
 
+        void setPrevious(Element<T> previous){this.previous = previous;}
+
         void setCurrent(T current) {
             this.current = current;
         }
@@ -155,9 +168,9 @@ public class MyList<T> implements ListInterface<T> {
     private final class ListIterator implements IteratorInterface<T>{
         private Element<T> focused;
         private int focusedIndex;
-        private MyList<T> internalList;
+        private MyListDouble<T> internalList;
 
-        ListIterator(MyList<T> internalList){
+        ListIterator(MyListDouble<T> internalList){
             this.internalList = internalList;
         }
 
@@ -186,14 +199,12 @@ public class MyList<T> implements ListInterface<T> {
 
         @Override
         public void previous() {
-            int indexToSet = --this.focusedIndex;
-            if (indexToSet >= 0){
-                this.first();
-                for (int i = 0; i < indexToSet; i++){
-                    this.next();
-                }
-            } else{
+            try{
+                this.focused = this.focused.getPrevious();
+            } catch (NullPointerException a) {
                 this.focused = null;
+            } finally {
+                this.focusedIndex--;
             }
         }
 
@@ -208,36 +219,37 @@ public class MyList<T> implements ListInterface<T> {
             return this.focused.getCurrent();
         }
 
-        @Override //TODO: fix
+        @Override
         public boolean addCurrent(T t) throws IndexOutOfBoundsException {
-            this.internalList.insert(t, this.focusedIndex);
-            Element<T> nextElement = this.focused.getNext();
-            Element<T> newElement = new Element<T>(t);
-            this.previous();
-            this.focused.setNext(newElement);
-            newElement.setNext(nextElement);
+            Element<T> newElement = new Element<>(t);
+            newElement.setNext(this.focused);
+            newElement.setPrevious(this.focused.getPrevious());
+            newElement.getNext().setPrevious(newElement);
+            newElement.getPrevious().setNext(newElement);
             this.focused = newElement;
-            this.focusedIndex++;
             this.internalList.size++;
             return true;
         }
 
         @Override
         public boolean addNext(T t) throws IndexOutOfBoundsException {
+            Element<T> newElement = new Element<>(t);
             Element<T> nextElement = this.focused.getNext();
-            this.focused.setNext(new Element<>(t));
-            this.focused.getNext().setNext(nextElement);
-            this.next();
+            newElement.setNext(nextElement);
+            if (nextElement != null) nextElement.setPrevious(newElement);
+            newElement.setPrevious(this.focused);
+            this.focused.setNext(newElement);
+            this.focused = newElement;
             this.internalList.size++;
             return true;
         }
 
-        @Override //TODO: fix
+        @Override
         public boolean deleteCurrent() throws IndexOutOfBoundsException {
-            Element<T> nextElement = this.focused.getNext();
-            this.previous();
-            this.focused.setNext(nextElement);
-            this.next();
+            Element<T> previous = this.focused.getPrevious();
+            Element<T> next = this.focused.getNext();
+            if (previous != null) previous.setNext(next);
+            if (next != null) next.setPrevious(previous);
             this.internalList.size--;
             return true;
         }
