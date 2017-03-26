@@ -126,7 +126,7 @@ public class MyList<T> implements ListInterface<T> {
         this.size = 0;
     }
 
-    private static final class Element<T> {
+    private final class Element<T> {
         private T current;
         private Element<T> next;
 
@@ -208,11 +208,11 @@ public class MyList<T> implements ListInterface<T> {
             return this.focused.getCurrent();
         }
 
-        @Override //TODO: fix
+        @Override
         public boolean addCurrent(T t) throws IndexOutOfBoundsException {
             this.internalList.insert(t, this.focusedIndex);
             Element<T> nextElement = this.focused.getNext();
-            Element<T> newElement = new Element<T>(t);
+            Element<T> newElement = new Element<>(t);
             this.previous();
             this.focused.setNext(newElement);
             newElement.setNext(nextElement);
@@ -232,7 +232,7 @@ public class MyList<T> implements ListInterface<T> {
             return true;
         }
 
-        @Override //TODO: fix
+        @Override
         public boolean deleteCurrent() throws IndexOutOfBoundsException {
             Element<T> nextElement = this.focused.getNext();
             this.previous();

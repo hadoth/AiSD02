@@ -65,7 +65,7 @@ public class MyListDouble<T> implements ListInterface<T> {
     @Override
     public void add(T t) {
         Element<T> newTail = new Element<>(t);
-        if (this.isEmpty()){
+        if (!this.isEmpty()){
             newTail.setPrevious(this.tail);
             this.tail.setNext(newTail);
             this.tail = newTail;
@@ -142,7 +142,7 @@ public class MyListDouble<T> implements ListInterface<T> {
         Element(T t){
             this.current = t;
             this.next = null;
-            this.current = null;
+            this.previous = null;
         }
 
         Element<T> getNext() {

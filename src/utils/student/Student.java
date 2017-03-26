@@ -72,4 +72,8 @@ public class Student {
     public String toString(){
         return this.name + " " + this.surname + ", nr albumu " + this.indexNumber + "; ocena: " + this.getGrade();
     }
+
+    public boolean equals(Student student){
+        return (this.name == student.getName()) && (this.surname == student.surname) && (this.indexNumber == student.getIndexNumber());
+    }
 }
